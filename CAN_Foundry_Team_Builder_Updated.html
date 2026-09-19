@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d10">
+<title>CAN Foundry Team Builder</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{--bg:#0a0b0e;--panel:#15181d;--panel2:#20242b;--line:#393e49;--text:#f6f7f8;--muted:#b6bac5;--gold:#ddb96e;--green:#82e6ae;--amber:#ffd27b;--blue:#9ccaff;--purple:#e4b4ff;--red:#ffaaaa}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#090a0d,#11141a 50%,#090a0d);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+button,input,select{font:inherit}.app{max-width:980px;margin:auto;padding:0 12px 110px}
+header{position:sticky;top:0;z-index:20;background:#090b0ef2;backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:12px 0}
+.brand{display:flex;justify-content:space-between;align-items:center;gap:10px}.brand h1{font-size:20px;margin:0}.brand small{color:var(--muted)}
+.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:10px 12px;border-radius:11px;font-weight:800}.btn.primary{background:linear-gradient(#e6c984,#b9893b);border-color:#efdca6;color:#15110a}.btn.full{width:100%}.btn.danger{color:#ffc1c1}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:13px;margin-top:12px}.card h2,.card h3{margin:0 0 9px}.card h2{font-size:18px}.card h3{font-size:15px;color:#ffe0a0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}label{font-size:12px;color:var(--muted)}input,select{width:100%;margin-top:5px;padding:11px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--text)}
+.note{color:var(--muted);font-size:13px;line-height:1.4}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.stat{background:var(--panel2);border:1px solid var(--line);padding:9px;border-radius:11px;text-align:center}.stat b{display:block;font-size:19px}
+.tabs{display:flex;gap:8px;margin-top:10px}.tabs button{flex:1}.tabs .active{background:linear-gradient(#e6c984,#b9893b);color:#15110a}
+.list{display:grid;gap:7px}.scroll{max-height:58vh;overflow:auto}.row{display:grid;grid-template-columns:38px 1fr auto auto;gap:8px;align-items:center;background:var(--panel2);border:1px solid var(--line);padding:8px;border-radius:11px}.rank{width:34px;height:34px;border-radius:9px;background:#101216;color:var(--gold);display:grid;place-items:center;font-weight:900}.name{font-weight:750;overflow-wrap:anywhere}
+.pill{border:0;border-radius:999px;padding:8px 9px;min-width:64px;font-weight:900}.out{background:#3d4048;color:#ddd}.deployed{background:#173f2b;color:var(--green)}.sub{background:#523d16;color:var(--amber)}.legion1{background:#193a58;color:var(--blue)}.legion2{background:#4d2953;color:var(--purple)}
+.actions{position:sticky;bottom:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;background:#101217e8;padding:8px;border-radius:14px;border:1px solid var(--line);backdrop-filter:blur(10px)}
+.hidden{display:none!important}.toolbar{display:flex;gap:8px;flex-wrap:wrap}.toolbar>*{flex:1;min-width:135px}.teamgrid{display:grid;gap:10px}.team{background:var(--panel);border:1px solid var(--line);border-radius:15px;overflow:hidden}.teamhead{display:flex;justify-content:space-between;gap:8px;padding:11px 12px;background:#211d15;border-bottom:1px solid #5e4a27}.teamhead h3{margin:0;color:#ffe0a0}.meta{text-align:right;color:#d3c39e;font-size:12px}.members{display:grid;gap:7px;padding:8px}.member{display:grid;grid-template-columns:38px 1fr auto;gap:8px;align-items:center;background:var(--panel2);border:1px solid var(--line);padding:8px;border-radius:11px}.role{font-size:12px;font-weight:900;padding:6px 8px;border-radius:999px;background:#2b2f37;color:#d7d9df}.subbox{margin:0 8px 8px;border:1px dashed #68532b;background:#221d13;padding:9px;border-radius:10px;color:#ffe0a0}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#fff;color:#111;padding:10px 14px;border-radius:999px;font-weight:800;opacity:0;pointer-events:none;transition:.2s;z-index:99}.toast.show{opacity:1}
+@media(min-width:720px){.teamgrid{grid-template-columns:1fr 1fr}.grid{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="brand"><div><h1>CAN Foundry Team Builder</h1><small>Simple Foundry assignments by legion</small></div><button class="btn" id="resetAll">Reset</button></div></header>
+
+<section id="selectView">
+<div class="card">
+<h2>Event setup</h2>
+<div class="grid">
+<label>Legion<select id="activeLegion"><option value="1">Legion 1</option><option value="2">Legion 2</option></select></label>
+<label>Event time<select id="eventTime"><option>14:00 UTC</option><option>19:00 UTC</option></select></label>
+<label>Date<input id="eventDate" type="date"></label>
+<label>Target group size<input value="5–6 players" disabled></label>
+</div>
+<div class="stats">
+<div class="stat"><b id="deployedCount">0</b>Deployed</div>
+<div class="stat"><b id="subCount">0</b>Subs</div>
+<div class="stat"><b id="outCount">0</b>Out</div>
+</div>
+</div>
+
+<div class="card">
+<h2>Select players</h2>
+<div class="toolbar"><input id="search" placeholder="Search player…"><button class="btn" id="showUsual">Show usual legion only</button></div>
+<p class="note">Tap status: OUT → DEPLOYED → SUB. Tap the legion badge to temporarily switch a player for this event. Usual Foundry legion is automatically the opposite of their Bear Trap.</p>
+<div id="rosterList" class="list scroll"></div>
+</div>
+
+<div class="actions"><button class="btn" id="saveBtn">Save</button><button class="btn primary" id="generateBtn">Generate Assignments</button></div>
+</section>
+
+<section id="resultsView" class="hidden">
+<div class="card">
+<h2>Foundry assignments</h2>
+<p class="note">Assignments are based only on deployed players in the selected legion. Gaia strength is re-ranked within that event roster.</p>
+<div class="toolbar"><button class="btn" id="backBtn">← Edit</button><button class="btn" id="rebalanceBtn">Regenerate</button><button class="btn primary" id="copyBtn">Copy Assignments</button></div>
+</div>
+<div id="warningBox" class="card hidden"></div>
+<div id="teamGrid" class="teamgrid"></div>
+<div id="subsBox" class="card hidden"></div>
+</section>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+const DEFAULT_ROSTER = [{"id":1,"name":"AngryMarshmallow","rank":1,"bt":"BT2","defaultLegion":1},{"id":2,"name":"I am Kit","rank":2,"bt":"BT2","defaultLegion":1},{"id":3,"name":"Stefan","rank":3,"bt":"BT2","defaultLegion":1},{"id":4,"name":"Lucky Meow","rank":4,"bt":"BT2","defaultLegion":1},{"id":5,"name":"Bun","rank":5,"bt":"BT1","defaultLegion":2},{"id":6,"name":"Space_balls","rank":6,"bt":"BT1","defaultLegion":2},{"id":7,"name":"Jbsnow","rank":7,"bt":"BT1","defaultLegion":2},{"id":8,"name":"Rellik","rank":8,"bt":"BT2","defaultLegion":1},{"id":9,"name":"Hedder","rank":9,"bt":"BT1","defaultLegion":2},{"id":10,"name":"BuRyAbAy","rank":10,"bt":"BT2","defaultLegion":1},{"id":11,"name":"Ntina","rank":11,"bt":"BT1","defaultLegion":2},{"id":12,"name":"༺༽l3@ck༼༻","rank":12,"bt":"BT2","defaultLegion":1},{"id":13,"name":"Weak BRS","rank":13,"bt":"BT2","defaultLegion":1},{"id":14,"name":"Brother Yatty","rank":14,"bt":"BT1","defaultLegion":2},{"id":15,"name":"Summer","rank":15,"bt":"BT2","defaultLegion":1},{"id":16,"name":"Choppy","rank":16,"bt":"BT2","defaultLegion":1},{"id":17,"name":"Dr.cutyMomo","rank":17,"bt":"BT1","defaultLegion":2},{"id":18,"name":"Tara","rank":18,"bt":"BT1","defaultLegion":2},{"id":19,"name":"Eurokeith","rank":19,"bt":"BT2","defaultLegion":1},{"id":20,"name":"Uranos","rank":20,"bt":"BT2","defaultLegion":1},{"id":21,"name":"Yaya_Bings","rank":21,"bt":"BT1","defaultLegion":2},{"id":22,"name":"Kals Avarys","rank":22,"bt":"BT1","defaultLegion":2},{"id":23,"name":"Seal","rank":23,"bt":"BT1","defaultLegion":2},{"id":24,"name":"Soraa","rank":24,"bt":"BT2","defaultLegion":1},{"id":25,"name":"Rosie","rank":25,"bt":"BT1","defaultLegion":2},{"id":26,"name":"Fu2fa2","rank":26,"bt":"BT2","defaultLegion":1},{"id":27,"name":"Kidbull","rank":27,"bt":"BT2","defaultLegion":1},{"id":28,"name":"Lord McLord","rank":28,"bt":"BT1","defaultLegion":2},{"id":29,"name":"Kirov Airship (rooster)","rank":29,"bt":"BT1","defaultLegion":2},{"id":30,"name":"Jina","rank":30,"bt":"BT2","defaultLegion":1},{"id":31,"name":"Filip1031","rank":31,"bt":"BT2","defaultLegion":1},{"id":32,"name":"ReyGattuso","rank":32,"bt":"BT1","defaultLegion":2},{"id":33,"name":"SpikeCujo","rank":33,"bt":"BT1","defaultLegion":2},{"id":34,"name":"NicolePharmD","rank":34,"bt":"BT1","defaultLegion":2},{"id":35,"name":"Seren (edoardo Galan)","rank":35,"bt":"BT1","defaultLegion":2},{"id":36,"name":"Cat","rank":36,"bt":"BT1","defaultLegion":2},{"id":37,"name":"伦恩少侠911","rank":37,"bt":"BT2","defaultLegion":1},{"id":38,"name":"Floopy","rank":38,"bt":"BT2","defaultLegion":1},{"id":39,"name":"U roll my balls","rank":39,"bt":"BT1","defaultLegion":2},{"id":40,"name":"Lord Vegnagun","rank":40,"bt":"BT1","defaultLegion":2},{"id":41,"name":"# solo #","rank":41,"bt":"BT1","defaultLegion":2},{"id":42,"name":"SKY","rank":42,"bt":"BT1","defaultLegion":2},{"id":43,"name":"Tdvt25","rank":43,"bt":"BT1","defaultLegion":2},{"id":44,"name":"Youshe","rank":44,"bt":"BT1","defaultLegion":2},{"id":45,"name":"Lexie (Bearded Dragon)","rank":45,"bt":"BT2","defaultLegion":1},{"id":46,"name":"Ranji","rank":46,"bt":"BT1","defaultLegion":2},{"id":47,"name":"Ibra","rank":47,"bt":"BT2","defaultLegion":1},{"id":48,"name":"Ratchin","rank":48,"bt":"BT2","defaultLegion":1},{"id":49,"name":"Kuman","rank":49,"bt":"BT2","defaultLegion":1},{"id":50,"name":"累累~累累~","rank":50,"bt":"BT2","defaultLegion":1},{"id":51,"name":"Doom Balls","rank":51,"bt":"BT1","defaultLegion":2},{"id":52,"name":"AZOZKA","rank":52,"bt":"BT1","defaultLegion":2},{"id":53,"name":"Psycho","rank":53,"bt":"BT2","defaultLegion":1},{"id":54,"name":"Timmu","rank":54,"bt":"BT1","defaultLegion":2},{"id":55,"name":"Skadi B","rank":55,"bt":"BT1","defaultLegion":2},{"id":56,"name":"Harmony","rank":56,"bt":"BT2","defaultLegion":1},{"id":57,"name":"Atiba","rank":57,"bt":"BT1","defaultLegion":2},{"id":58,"name":"Shoushana","rank":58,"bt":"BT2","defaultLegion":1},{"id":59,"name":"Meli","rank":59,"bt":"BT2","defaultLegion":1},{"id":60,"name":"Biiiiiiiiing~O","rank":60,"bt":"BT1","defaultLegion":2},{"id":61,"name":"Nebulese","rank":61,"bt":"BT2","defaultLegion":1},{"id":62,"name":"Vulture","rank":62,"bt":"BT1","defaultLegion":2},{"id":63,"name":"SteelCityInsider","rank":63,"bt":"BT1","defaultLegion":2},{"id":64,"name":"Euphoria","rank":64,"bt":"BT2","defaultLegion":1},{"id":65,"name":"Durzu","rank":65,"bt":"BT1","defaultLegion":2},{"id":66,"name":"VKdViKing","rank":66,"bt":"BT1","defaultLegion":2},{"id":67,"name":"Bani Adam","rank":67,"bt":"BT2","defaultLegion":1},{"id":68,"name":"Wildkid","rank":68,"bt":"BT2","defaultLegion":1},{"id":69,"name":"Vrekmontt","rank":69,"bt":"BT1","defaultLegion":2},{"id":70,"name":"Melonlord","rank":70,"bt":"BT1","defaultLegion":2},{"id":71,"name":"Punni","rank":71,"bt":"BT2","defaultLegion":1},{"id":72,"name":"Gritsayenko","rank":72,"bt":"BT2","defaultLegion":1},{"id":73,"name":"Kayzersoze77","rank":73,"bt":"BT1","defaultLegion":2},{"id":74,"name":"Mana","rank":74,"bt":"BT2","defaultLegion":1},{"id":75,"name":"Crazy Slime","rank":75,"bt":"BT2","defaultLegion":1},{"id":76,"name":"Sukuna","rank":76,"bt":"BT2","defaultLegion":1},{"id":77,"name":"Shoretallsong","rank":77,"bt":"BT1","defaultLegion":2},{"id":78,"name":"RANGERS","rank":78,"bt":"BT2","defaultLegion":1},{"id":79,"name":"عيسى","rank":79,"bt":"BT2","defaultLegion":1},{"id":80,"name":"Noura","rank":80,"bt":"BT1","defaultLegion":2},{"id":81,"name":"FatCHUCK","rank":81,"bt":"BT1","defaultLegion":2},{"id":82,"name":"DonMeloooon","rank":82,"bt":"BT1","defaultLegion":2},{"id":83,"name":"Doomsday","rank":83,"bt":"BT1","defaultLegion":2}];
+const KEY = 'CAN_FOUNDRY_BUILDER_V1';
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+const today = () => new Date().toISOString().slice(0,10);
+let db = {roster:structuredClone(DEFAULT_ROSTER), events:{}, lastLegion:1};
+let showOnlyUsual = false;
+let generated = null;
+
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x)db={...db,...x}}catch(e){}}
+function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+function toast(t){const x=$('#toast');x.textContent=t;x.classList.add('show');setTimeout(()=>x.classList.remove('show'),1300)}
+function eventKey(){return `${$('#eventDate').value}|L${$('#activeLegion').value}|${$('#eventTime').value}`}
+function eventData(){const k=eventKey();db.events[k] ||= {status:{},legionOverride:{}};return db.events[k]}
+function playerLegion(p){const e=eventData();return +(e.legionOverride[p.id] || p.defaultLegion)}
+function statusOf(p){return eventData().status[p.id] || 'out'}
+function cycleStatus(s){return {out:'deployed',deployed:'sub',sub:'out'}[s]}
+function counts(){const leg=+$('#activeLegion').value,ps=db.roster.filter(p=>playerLegion(p)===leg),vals=ps.map(statusOf);$('#deployedCount').textContent=vals.filter(x=>x==='deployed').length;$('#subCount').textContent=vals.filter(x=>x==='sub').length;$('#outCount').textContent=vals.filter(x=>x==='out').length}
+
+function renderRoster(){
+ const q=$('#search').value.toLowerCase(),leg=+$('#activeLegion').value,box=$('#rosterList');box.innerHTML='';
+ db.roster.filter(p=>p.name.toLowerCase().includes(q)).filter(p=>!showOnlyUsual || p.defaultLegion===leg).sort((a,b)=>a.rank-b.rank).forEach(p=>{
+   const s=statusOf(p),pl=playerLegion(p),d=document.createElement('div');d.className='row';
+   d.innerHTML=`<div class="rank">${p.rank}</div><div class="name">${esc(p.name)}<div class="note">${p.bt} • usual L${p.defaultLegion}</div></div><button class="pill legion${pl}">L${pl}</button><button class="pill ${s}">${s==='out'?'OUT':s.toUpperCase()}</button>`;
+   d.children[2].onclick=()=>{eventData().legionOverride[p.id]=pl===1?2:1;save();renderRoster()};
+   d.children[3].onclick=()=>{eventData().status[p.id]=cycleStatus(s);save();renderRoster()};
+   box.appendChild(d)
+ });
+ counts()
+}
+
+function snake(players,n){
+ const teams=Array.from({length:n},()=>[]);
+ players.sort((a,b)=>a.eventRank-b.eventRank).forEach((p,i)=>{
+   const row=Math.floor(i/n), col=i%n, idx=row%2?n-1-col:col;
+   teams[idx].push(p)
+ });
+ return teams
+}
+function score(t){return t.reduce((s,p)=>s+(p.eventRank||0),0)}
+function optimize(teams){
+ for(let z=0;z<150;z++){
+   const sums=teams.map(score), before=Math.max(...sums)-Math.min(...sums);
+   let changed=false;
+   outer:for(let a=0;a<teams.length;a++)for(let b=a+1;b<teams.length;b++)for(let i=0;i<teams[a].length;i++)for(let j=0;j<teams[b].length;j++){
+     const test=sums.slice();
+     test[a]=sums[a]-teams[a][i].eventRank+teams[b][j].eventRank;
+     test[b]=sums[b]-teams[b][j].eventRank+teams[a][i].eventRank;
+     if(Math.max(...test)-Math.min(...test)<before){
+       [teams[a][i],teams[b][j]]=[teams[b][j],teams[a][i]];
+       changed=true;break outer
+     }
+   }
+   if(!changed)break
+ }
+ return teams
+}
+
+function generate(){
+ const leg=+$('#activeLegion').value;
+ let deployed=db.roster.filter(p=>playerLegion(p)===leg && statusOf(p)==='deployed').sort((a,b)=>a.rank-b.rank).map((p,i)=>({...p,eventRank:i+1}));
+ const subs=db.roster.filter(p=>playerLegion(p)===leg && statusOf(p)==='sub').sort((a,b)=>a.rank-b.rank);
+ if(!deployed.length){toast('Select deployed players first');return}
+
+ const groups=[
+  {id:1,label:'⚔️ Group 1 — Assassins / Looters',primary:'Attack, disrupt, collect arsenal points',members:[]},
+  {id:2,label:'🔥 Group 2 — Boiler Room',primary:'Boiler Room • Repair Facility 4 • Mercenary Camp',members:[]},
+  {id:3,label:'🧪 Group 3 — Prototype 1',primary:'Prototype 1 • Repair Facility I',members:[]},
+  {id:4,label:'🚉 Group 4 — Transit Station',primary:'Transit Station • Repair Facility II • Munitions Warehouse',members:[]},
+  {id:5,label:'⚙️ Group 5 — Prototype 2',primary:'Prototype 2 • Repair Facility III',members:[]},
+  {id:6,label:'💰 Group 6 — Gatherers / Floaters / Support',primary:'Workshops, looting, reinforcements, pressure support',members:[]}
+ ];
+ const takeRank=n=>deployed.find(p=>p.eventRank===n);
+
+ [1,2].forEach(r=>{const p=takeRank(r);if(p)groups[0].members.push({...p,role:'Assassin'})});
+
+ const leadership=[
+  [3,3,'Captain'],[4,5,'Captain'],[5,2,'Captain'],[6,4,'Captain'],
+  [7,3,'Sub-Captain'],[8,5,'Sub-Captain'],[9,2,'Sub-Captain'],[10,4,'Sub-Captain']
+ ];
+ const used=new Set(groups[0].members.map(p=>p.id));
+ leadership.forEach(([rank,gid,role])=>{const p=takeRank(rank);if(p){groups[gid-1].members.push({...p,role});used.add(p.id)}});
+ groups[0].members.forEach(p=>used.add(p.id));
+
+ let remaining=deployed.filter(p=>!used.has(p.id));
+ const core=groups.slice(1,5);
+
+ // Fill Groups 2–5 toward five players first, then six if attendance allows.
+ while(remaining.length && core.some(g=>g.members.length<5)){
+   const g=core.slice().sort((a,b)=>a.members.length-b.members.length || score(a.members)-score(b.members))[0];
+   g.members.push({...remaining.shift(),role:'Member'});
+ }
+ while(remaining.length && core.some(g=>g.members.length<6)){
+   const g=core.slice().sort((a,b)=>a.members.length-b.members.length || score(a.members)-score(b.members))[0];
+   g.members.push({...remaining.shift(),role:'Member'});
+ }
+ remaining.forEach(p=>groups[5].members.push({...p,role:'Support'}));
+
+ // Low attendance notes and graceful fallback.
+ let warnings=[];
+ if(deployed.length<22){
+   warnings.push('⚠ Low attendance: Group 1 Captain may also captain Prototype 1.');
+   warnings.push('⚠ Group 2 Captain may also cover Repair Facility 4.');
+   warnings.push('⚠ Support Team may be reduced to 2 players.');
+ }
+ if(deployed.length<10)warnings.push('⚠ Very low attendance: some captain or sub-captain roles are unfilled.');
+ generated={legion:leg,groups,subs,warnings,date:$('#eventDate').value,time:$('#eventTime').value};
+ renderResults();
+ $('#selectView').classList.add('hidden');$('#resultsView').classList.remove('hidden');
+}
+
+function renderResults(){
+ const box=$('#teamGrid');box.innerHTML='';
+ generated.groups.forEach(g=>{
+   const d=document.createElement('div');d.className='team';
+   d.innerHTML=`<div class="teamhead"><div><h3>${g.label}</h3><div class="note">${g.primary}</div></div><div class="meta">${g.members.length} players<br>Rank sum ${score(g.members)}</div></div><div class="members"></div>`;
+   const m=d.querySelector('.members');
+   if(!g.members.length)m.innerHTML='<div class="note">No players assigned.</div>';
+   g.members.forEach(p=>{const r=document.createElement('div');r.className='member';r.innerHTML=`<div class="rank">${p.eventRank||p.rank}</div><div class="name">${esc(p.name)}</div><span class="role">${p.role}</span>`;m.appendChild(r)});
+   box.appendChild(d)
+ });
+ const wb=$('#warningBox');
+ if(generated.warnings.length){wb.classList.remove('hidden');wb.innerHTML=`<h3>Low attendance notes</h3>${generated.warnings.map(x=>`<div class="note">${x}</div>`).join('')}`}else wb.classList.add('hidden');
+ const sb=$('#subsBox');
+ if(generated.subs.length){sb.classList.remove('hidden');sb.innerHTML=`<h3>Substitutes</h3><div class="note">${generated.subs.map(p=>esc(p.name)).join(', ')}</div>`}else sb.classList.add('hidden');
+}
+
+function copyText(){
+ let out=`🏭 FOUNDRY LEGION ${generated.legion}\n${generated.date} • ${generated.time}\n`;
+ generated.groups.forEach(g=>{
+   out+=`\n${g.label}\n${g.primary}\n`;
+   if(!g.members.length)out+='• No players assigned\n';
+   g.members.forEach(p=>out+=`• ${p.name} — ${p.role}\n`);
+ });
+ if(generated.subs.length)out+=`\n🟡 SUBSTITUTES\n${generated.subs.map(p=>'• '+p.name).join('\n')}\n`;
+ if(generated.warnings.length)out+=`\n${generated.warnings.join('\n')}\n`;
+ navigator.clipboard.writeText(out).then(()=>toast('Copied')).catch(()=>prompt('Copy this text:',out))
+}
+
+$('#eventDate').value=today();
+$('#activeLegion').onchange=()=>{db.lastLegion=+$('#activeLegion').value;save();renderRoster()};
+$('#eventTime').onchange=renderRoster;$('#eventDate').onchange=renderRoster;$('#search').oninput=renderRoster;
+$('#showUsual').onclick=()=>{showOnlyUsual=!showOnlyUsual;$('#showUsual').textContent=showOnlyUsual?'Show all players':'Show usual legion only';renderRoster()};
+$('#saveBtn').onclick=()=>{save();toast('Saved')};$('#generateBtn').onclick=generate;
+$('#backBtn').onclick=()=>{$('#resultsView').classList.add('hidden');$('#selectView').classList.remove('hidden')};
+$('#rebalanceBtn').onclick=generate;$('#copyBtn').onclick=copyText;
+$('#resetAll').onclick=()=>{if(confirm('Reset all selections for this event?')){db.events[eventKey()]={status:{},legionOverride:{}};save();renderRoster();toast('Reset')}};
+
+load();$('#activeLegion').value=String(db.lastLegion||1);renderRoster();
+</script>
+</body>
+</html>
